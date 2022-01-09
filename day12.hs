@@ -37,28 +37,16 @@ isValidCave caveName road
 
 isValidCave2 :: String -> Road -> Bool
 isValidCave2 caveName road
-    | caveName == "start" = False 
+    | caveName == "start" = False
     | not (isLower (head caveName)) = True
-    | otherwise = countCaves caveName road < 2
-
-isCycle :: Road -> Edge -> Bool
-isCycle (step4:step3:step2:step1:_) (start, end)
-    | step4 == step2 && step3 == step1 = start == step3 && end == step4 || start == step4 && end == step3
-    | otherwise = False
-isCycle _ _ = False
-
-notCycle :: Edge -> String -> Road -> Bool
-notCycle edge lastCave road
-    | length road < 4 = True
-    | otherwise = not (isCycle (take 4 road) edge)
-
+    | otherwise = maximum (map (`countCaves` newRoad) newRoad) < 2
+        where newRoad = caveName:road
 
 nextEdgesForRoad :: Road -> Graph String -> [Edge]
 nextEdgesForRoad [] grapqh = []
 nextEdgesForRoad road@(lastCave:rest) graph = [
     edge | edge@(start,end) <- allEdges,
-    isValidCave2 (getNext lastCave edge) road,
-    notCycle edge lastCave road]
+    isValidCave2 (getNext lastCave edge) road]
     where
         allEdges = nextEdges lastCave graph
 
@@ -72,7 +60,7 @@ proceedRoads :: Graph String  -> [Road] -> [Road]
 proceedRoads graph = concatMap (proceed graph)
 
 proceedToTheEnd :: Int -> Graph String  -> [Road] -> [Road]
-proceedToTheEnd 20 graph acc =  acc
+proceedToTheEnd 10 graph acc =  acc
 proceedToTheEnd n graph acc = proceedToTheEnd (n + 1) graph nextRoads
     where nextRoads = proceedRoads graph acc
 
@@ -83,7 +71,6 @@ main = do
     contents <- hGetContents handle
     let lst = map (splitBy "-" ([], []) False) $ words contents
     let g = Graph lst
-    -- let firstSteps = map ((:["start"]) . getNext "start") (nextEdges "start" g)
     let roads = findValidRoads $ proceedToTheEnd 0 g [["start"]]
     print $ length roads
     putStrLn $ take 1000 $ unlines $ map (concatMap (++ ",") . reverse) roads
