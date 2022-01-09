@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# LANGUAGE MultiWayIf #-}
 
 import System.IO
     ( hClose, openFile, hGetContents, IOMode(ReadMode) )
@@ -35,12 +36,21 @@ isValidCave caveName road
     | not (isLower (head caveName)) = True
     | otherwise = countCaves caveName road == 0
 
+visitedStats :: String -> Road -> (Int, Bool)
+visitedStats caveName road = foldr (\roadCave (thisCount, otherDouble) -> if
+    | roadCave == caveName -> (thisCount + 1, otherDouble)
+    | not $ isLower $ head roadCave -> (thisCount, otherDouble)
+    | otherDouble -> (thisCount, otherDouble)
+    | otherwise -> (thisCount, countCaves roadCave road == 2)
+     ) (0, False) road
+
 isValidCave2 :: String -> Road -> Bool
 isValidCave2 caveName road
     | caveName == "start" = False
     | not (isLower (head caveName)) = True
-    | otherwise = maximum (map (`countCaves` newRoad) newRoad) < 2
-        where newRoad = caveName:road
+    | snd stats = fst stats == 0
+    | otherwise = fst stats < 2
+        where stats = visitedStats caveName road
 
 nextEdgesForRoad :: Road -> Graph String -> [Edge]
 nextEdgesForRoad [] grapqh = []
@@ -60,14 +70,14 @@ proceedRoads :: Graph String  -> [Road] -> [Road]
 proceedRoads graph = concatMap (proceed graph)
 
 proceedToTheEnd :: Int -> Graph String  -> [Road] -> [Road]
-proceedToTheEnd 10 graph acc =  acc
+proceedToTheEnd 20 graph acc =  acc
 proceedToTheEnd n graph acc = proceedToTheEnd (n + 1) graph nextRoads
     where nextRoads = proceedRoads graph acc
 
 findValidRoads = filter ((=="end") . head)
 
 main = do
-    handle <- openFile "./day12-short" ReadMode
+    handle <- openFile "./day12" ReadMode
     contents <- hGetContents handle
     let lst = map (splitBy "-" ([], []) False) $ words contents
     let g = Graph lst
