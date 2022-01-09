@@ -5,7 +5,8 @@ import Data.Char(digitToInt)
 parse :: String -> [[Int]]
 parse = map (map digitToInt) . words
 
-isLowest x y input = 
+isLowest x y input =
+    let down
 
 lowest input = [x | x <- [0..length input], y <- [0..length input]]
 
